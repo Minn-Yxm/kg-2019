@@ -45,23 +45,23 @@ def sent2vec(S):
     return V
 
 
-total_data = json.load(open('../datasets/train_data_vote_me.json'))
-id2predicate, predicate2id = json.load(open('../datasets/all_50_schemas_me.json'))
+total_data = json.load(open('./datasets/train_data_vote_me.json','r',encoding='utf-8'))
+id2predicate, predicate2id = json.load(open('./datasets/all_50_schemas_me.json','r',encoding='utf-8'))
 id2predicate = {int(i):j for i,j in id2predicate.items()}
-id2char, char2id = json.load(open('../datasets/all_chars_me.json'))
+id2char, char2id = json.load(open('./datasets/all_chars_me.json','r',encoding='utf-8'))
 num_classes = len(id2predicate)
 
 
-if not os.path.exists('../random_order_vote.json'):
-    random_order = range(len(total_data))
+if not os.path.exists('./datasets/random_order_vote.json'):
+    random_order = list(range(len(total_data)))
     np.random.shuffle(random_order)
     json.dump(
         random_order,
-        open('../random_order_vote.json', 'w'),
+        open('./datasets/random_order_vote.json', 'w',encoding='utf-8'),
         indent=4
     )
 else:
-    random_order = json.load(open('../random_order_vote.json'))
+    random_order = json.load(open('./datasets/random_order_vote.json','r',encoding='utf-8'))
 
 
 train_data = [total_data[j] for i, j in enumerate(random_order) if i % 8 != mode]
@@ -136,12 +136,12 @@ class AC_Unicode:
     def __init__(self):
         self.ac = ahocorasick.Automaton()
     def add_word(self, k, v):
-        k = k.encode('utf-8')
+        # k = k.encode('utf-8')
         return self.ac.add_word(k, v)
     def make_automaton(self):
         return self.ac.make_automaton()
     def iter(self, s):
-        s = s.encode('utf-8')
+        # s = s.encode('utf-8')
         return self.ac.iter(s)
 
 
@@ -190,7 +190,7 @@ class data_generator:
         return self.steps
     def __iter__(self):
         while True:
-            idxs = range(len(self.data))
+            idxs = list(range(len(self.data)))
             np.random.shuffle(idxs)
             T1, T2, S1, S2, K1, K2, O1, O2, PRES, PREO = [], [], [], [], [], [], [], [], [], []
             for i in idxs:
@@ -232,7 +232,7 @@ class data_generator:
                     for j in pre_items:
                         pres[j[0], 0] = 1
                         pres[j[1]-1, 1] = 1
-                    k1, k2 = np.array(items.keys()).T
+                    k1, k2 = np.array(list(items.keys())).T
                     k1 = choice(k1)
                     k2 = choice(k2[k2 >= k1])
                     o1, o2 = np.zeros((len(text), num_classes)), np.zeros((len(text), num_classes))
@@ -653,7 +653,7 @@ class Evaluate(Callback):
     def evaluate(self):
         orders = ['subject', 'predicate', 'object']
         A, B, C = 1e-10, 1e-10, 1e-10
-        F = open('dev_pred.json', 'w')
+        F = open('dev_pred.json', 'w',encoding='utf-8')
         for d in tqdm(iter(dev_data)):
             R = set(extract_items(d['text']))
             T = set(d['spo_list'])
@@ -675,7 +675,7 @@ class Evaluate(Callback):
                     dict(zip(orders, spo)) for spo in T - R
                 ]
             }, ensure_ascii=False, indent=4)
-            F.write(s.encode('utf-8') + '\n')
+            F.write(s + '\n')
         F.close()
         return 2 * A / (B + C), A / B, A / C
 
@@ -684,7 +684,7 @@ def test(test_data):
     """输出测试结果
     """
     orders = ['subject', 'predicate', 'object', 'object_type', 'subject_type']
-    F = open('test_pred.json', 'w')
+    F = open('test_pred.json', 'w',encoding='utf-8')
     for d in tqdm(iter(test_data)):
         R = set(extract_items(d['text']))
         s = json.dumps({
@@ -693,7 +693,7 @@ def test(test_data):
                 dict(zip(orders, spo + ('', ''))) for spo in R
             ]
         }, ensure_ascii=False)
-        F.write(s.encode('utf-8') + '\n')
+        F.write(s + '\n')
     F.close()
 
 
